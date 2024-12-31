@@ -9,7 +9,7 @@ const foodModel = require('./foodModel')
 const trackingModel = require('./trackingModel')
 const cors = require('cors')
 const nodemailer = require('nodemailer')
-const PORT = process.env.PORT || 8000
+const PORT = process.env.PORT 
 
 
 
