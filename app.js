@@ -26,19 +26,10 @@ app.use(express.json())
 app.use(cors())
 
 
-const allowedOrigins = [
-  'https://magical-halva-b65d2a.netlify.app',
-  'https://67744cbbeee13c8fed1785a4--chimerical-choux-4b6fa1.netlify.app/'
-];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
+  origin: "http://localhost:5173", // Replace with your frontend's origin
+  methods: "GET, POST, PUT, DELETE",
+  credentials: true,
 }));
 
 
