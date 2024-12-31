@@ -24,10 +24,23 @@ mongoose.connect(process.env.MONGO_URL)
 const app = express()
 app.use(express.json())
 app.use(cors())
+
+
+const allowedOrigins = [
+  'https://magical-halva-b65d2a.netlify.app',
+  'https://67744cbbeee13c8fed1785a4--chimerical-choux-4b6fa1.netlify.app/'
+];
+
 app.use(cors({
-    origin: "https://67744cbbeee13c8fed1785a4--chimerical-choux-4b6fa1.netlify.app/",
-    credentials: false,
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
 }));
+
 
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
