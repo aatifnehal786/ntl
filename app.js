@@ -9,7 +9,7 @@ const foodModel = require('./foodModel')
 const trackingModel = require('./trackingModel')
 const cors = require('cors')
 const nodemailer = require('nodemailer')
-const PORT = process.env.PORT || 4000
+const port = process.env.PORT || 4000
 
 
 
@@ -278,5 +278,5 @@ app.get("*", (req, res) => {
 });
 
 app.listen(PORT,()=>{
-    console.log(`Server is up and running ${PORT}`)
+    console.log(`Server is up and running ${port}`)
 })
