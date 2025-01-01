@@ -42,7 +42,14 @@ app.use((req, res, next) => {
   next();
 });
 
-
+const transporter = nodemailer.createTransport({
+    service:"gmail",
+    
+    auth:{
+        user:process.env.MY_GMAIL,
+        pass:process.env.GMAIL_PASSWORD
+    }
+})
 
 app.post("/register",(req,res)=>{
 
@@ -152,14 +159,7 @@ app.post("/login",async (req,res)=>{
     }
 })
 
-const transporter = nodemailer.createTransport({
-    service:"gmail",
-    
-    auth:{
-        user:process.env.MY_GMAIL,
-        pass:process.env.GMAIL_PASSWORD
-    }
-})
+
 
 app.get("/foods",verifiedToken,async (req,res)=>{
 
