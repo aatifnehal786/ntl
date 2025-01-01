@@ -258,12 +258,13 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
         if (foods.length === 0) {
             return res.status(204).send(); // No data found, return 204
         }
-        res.send(foods); // Send data back if found
+        res.json(foods); // Send data back as JSON if found
     } catch (err) {
         console.error("Error fetching data:", err);
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
+
 
 
 
