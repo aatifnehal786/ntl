@@ -27,7 +27,7 @@ app.use(cors())
 
 
 app.use(cors({
-  origin: "http://localhost:5173","https://ntl.onrender.com", // Replace with your frontend's origin
+  origin: "http://localhost:5173", // Replace with your frontend's origin
   methods: "GET, POST, PUT, DELETE",
   credentials: true,
 }));
