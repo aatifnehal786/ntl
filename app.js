@@ -247,21 +247,22 @@ app.post("/track",verifiedToken,async (req,res)=>{
 // endpoint to fetch all foods eaten by a single person
 
 app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
-  const userid = req.params.userid;
-  let date = req.params.date; // The date will be in MM/DD/YYYY format, e.g., "12/31/2024"
+    let userid = req.params.userid;
+    let date = new Date(req.params.date);
+    let strDate = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+    console.log("Requested date:", strDate);
 
-  try {
-    let foods = await trackingModel
-      .find({ user: userid, eatendate: date }) // `eatendate` is expected in MM/DD/YYYY format
-      .populate("user")
-      .populate("food");
-
-    console.log("Foods:", foods); // Verify the fetched data
-    res.send(foods);
-  } catch (err) {
-    console.error("Error:", err);
-    res.send({ message: "Some problem occurred." });
-  }
+    try {
+        let foods = await trackingModel.find({ user: userid, eatendate: strDate }).populate('user').populate('food');
+        console.log("Found foods:", foods); // Log the result to confirm
+        if (foods.length === 0) {
+            return res.status(204).send(); // No data found, return 204
+        }
+        res.send(foods); // Send data back if found
+    } catch (err) {
+        console.error("Error fetching data:", err);
+        res.status(500).send({ message: "Some problem occurred" });
+    }
 });
 
 
