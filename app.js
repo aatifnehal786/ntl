@@ -183,46 +183,30 @@ app.get("/foods",verifiedToken,async (req,res)=>{
 app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
 
-    try {
-        if (!email) {
-            return res.status(400).send({ message: "Please provide email" });
-        }
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
 
-        const user = await userModel.findOne({ email });
-        if (!user) {
-            return res.status(404).send({ message: "User not found" });
-        }
+  // Generate a 6-digit OTP
+  const otp = crypto.randomInt(100000, 999999).toString();
 
-        // Generate token
-        const token = jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
+  // Store the OTP (expire in 5 minutes)
+  otpStorage[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
-        // Save token and expiration in the user's record
-        user.resetToken = {
-            token,
-            expires: new Date(Date.now() + 3600000), // 1 hour from now
-        };
-        await user.save();
+  try {
+    // Send the OTP via email
+    await transporter.sendMail({
+      from: `"Nutrify" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
+    });
 
-        // Send email with reset link
-        const resetLink = `${process.env.RESET_LINK}/${token}`;
-        const receiver = {
-            from: process.env.MY_GMAIL,
-            to: email,
-            subject: "Password Reset Link",
-            text: `Click on this link to reset your password: ${resetLink}`,
-        };
-
-        transporter.sendMail(receiver, (err, info) => {
-            if (err) {
-                return res.status(500).send({ message: "Error sending email" });
-            } else {
-                return res.status(200).send({ message: "Password reset link sent to your email" });
-            }
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Some problem occurred" });
-    }
+    res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
 });
 
 
