@@ -247,8 +247,10 @@ app.post("/track",verifiedToken,async (req,res)=>{
 // endpoint to fetch all foods eaten by a single person
 app.get("/track/:userid/:date",verifiedToken,async (req,res)=>{
     let userid = req.params.userid;
-    let date = new Date(req.params.date)
-    let strDate = date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear()
+   
+    let options = { year: "numeric", month: "2-digit", day: "2-digit" };
+    let strDate = new Intl.DateTimeFormat("en-US", options).format(date);
+
     console.log(strDate)
     try{
 
