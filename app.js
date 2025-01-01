@@ -15,7 +15,7 @@ const port = process.env.PORT || 4000
 
 mongoose.connect(process.env.MONGO_URL)
 .then(()=>{
-    console.log("Database connection successful")
+    console.log(`Database connection successful,${process.env.MONGO_URL}`)
 })
 .catch((err)=>{
     console.log(err)
