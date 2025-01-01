@@ -213,51 +213,56 @@ app.post("/forgot-password", async (req, res) => {
 
 
 app.post("/reset-password", async (req, res) => {
-   
-    const { newPass, otp } = req.body;
+    const { email, newPass, otp } = req.body;
 
-    if (!email || !otp) {
-        return res.status(400).json({ error: "Email and OTP are required" });
+    // Validate input
+    if (!email || !otp || !newPass) {
+        return res.status(400).json({ error: "Email, OTP, and new password are required" });
     }
 
     const storedData = otpStorage[email];
 
+    // Verify OTP
     if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
         return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
     try {
-        // Verify the otp
-        if(storeData.otp === otp)
-        {
+        // Find user in the database
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
 
-            bcrypt.genSalt(10, (err, salt) => {
-            if (err) return res.status(500).send({ message: "Error generating salt" });
-            // Hash the new password
+        // Hash the new password
+        bcrypt.genSalt(10, (err, salt) => {
+            if (err) {
+                console.error("Error generating salt:", err);
+                return res.status(500).send({ message: "Error generating salt" });
+            }
+
             bcrypt.hash(newPass, salt, async (err, hash) => {
-                if (err) return res.status(500).send({ message: "Error hashing password" });
+                if (err) {
+                    console.error("Error hashing password:", err);
+                    return res.status(500).send({ message: "Error hashing password" });
+                }
 
-                // Update password and clear reset token
+                // Update user password
                 user.password = hash;
-                
                 await user.save();
+
+                // Remove OTP from storage
+                delete otpStorage[email];
 
                 res.status(200).send({ message: "Password reset successfully" });
             });
         });
-
-            
-        }
-        
-        
-
-        
-        
     } catch (error) {
-        console.error(error);
+        console.error("Error resetting password:", error);
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
+
 
 
 app.post("/food/data",verifiedToken,async (req,res)=>{
