@@ -131,37 +131,43 @@ app.post("/verify-otp", async (req, res) => {
 });
 
 
-app.post("/login",async (req,res)=>{
-    let userCred = req.body
-    try{
-        let user = await userModel.findOne({email:userCred.email})
-        console.log(user)
-    if(user!==null){
-        bcrypt.compare(userCred.password,user.password,(err,success)=>{
-            if(success==true){
-                jwt.sign({email:userCred.email},process.env.JWT_SECRET_KEY,(err,token)=>{
-                    if(!err){
-                        res.status(201).send({token:token,message:"Login success",userid:user._id,name:user.name})
+app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await userModel.findOne({ email });
+
+        if (!user) {
+            return res.status(404).send({ message: "User not found" });
+        }
+
+        if (!user.isEmailVerified) {
+            return res.status(403).send({ message: "Email not verified. Please verify your email to login." });
+        }
+
+        bcrypt.compare(password, user.password, (err, success) => {
+            if (success) {
+                jwt.sign({ email }, process.env.JWT_SECRET_KEY, (err, token) => {
+                    if (!err) {
+                        res.status(200).send({ 
+                            token, 
+                            message: "Login successful", 
+                            userid: user._id, 
+                            name: user.name 
+                        });
+                    } else {
+                        res.status(500).send({ message: "Error generating token" });
                     }
-                    else{
-                        res.status(403).send({message:"Some problem while generating token"})
-                    }
-                })
-                
-            }else{
-                res.status(401).send({message:"Wrong password"})
+                });
+            } else {
+                res.status(401).send({ message: "Incorrect password" });
             }
-        })
-    }else{
-        res.status(404).send({message:"User not found please login again"})
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Some problem occurred" });
     }
-
-    }catch(err){
-        console.log(err)
-        res.status(500).send({message:"Some Problem"})
-
-    }
-})
+});
 
 
 
