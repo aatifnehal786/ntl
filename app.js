@@ -7,8 +7,10 @@ const userModel = require('./userModel')
 const verifiedToken = require('./verifiedToken')
 const foodModel = require('./foodModel')
 const trackingModel = require('./trackingModel')
+const bodyParser = require("body-parser");
 const cors = require('cors')
 const nodemailer = require('nodemailer')
+const crypto = require("crypto");
 const port = process.env.PORT || 4000
 
 
@@ -62,6 +64,61 @@ app.post("/register",(req,res)=>{
     })
 
 })
+
+const otpStorage = {};
+app.post("/send-otp", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  // Generate a 6-digit OTP
+  const otp = crypto.randomInt(100000, 999999).toString();
+
+  // Store the OTP (expire in 5 minutes)
+  otpStorage[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+
+  try {
+    // Send the OTP via email
+    await transporter.sendMail({
+      from: `"Nutrify" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
+    });
+
+    res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+});
+
+// API to verify OTP
+app.post("/verify-otp", (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ error: "Email and OTP are required" });
+  }
+
+  const storedData = otpStorage[email];
+
+  // Check if OTP exists and is valid
+  if (
+    !storedData ||
+    storedData.otp !== otp ||
+    storedData.expiresAt < Date.now()
+  ) {
+    return res.status(400).json({ error: "Invalid or expired OTP" });
+  }
+
+  // OTP is valid, delete it from storage
+  delete otpStorage[email];
+
+  res.json({ message: "OTP verified successfully" });
+});
 
 app.post("/login",async (req,res)=>{
     let userCred = req.body
