@@ -251,8 +251,8 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
   let date = new Date(req.params.date);
 
   // Ensure correct date formatting
-  let options = { year: "numeric", month: "2-digit", day: "2-digit" };
-  let strDate = new Intl.DateTimeFormat("en-US", options).format(date);
+  let strDate = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+
 
   console.log("Formatted date:", strDate);
 
