@@ -103,29 +103,33 @@ app.post("/send-otp", async (req, res) => {
 });
 
 // API to verify OTP
-app.post("/verify-otp", (req, res) => {
-  const { email, otp } = req.body;
+app.post("/verify-otp", async (req, res) => {
+    const { email, otp } = req.body;
 
-  if (!email || !otp) {
-    return res.status(400).json({ error: "Email and OTP are required" });
-  }
+    if (!email || !otp) {
+        return res.status(400).json({ error: "Email and OTP are required" });
+    }
 
-  const storedData = otpStorage[email];
+    const storedData = otpStorage[email];
 
-  // Check if OTP exists and is valid
-  if (
-    !storedData ||
-    storedData.otp !== otp ||
-    storedData.expiresAt < Date.now()
-  ) {
-    return res.status(400).json({ error: "Invalid or expired OTP" });
-  }
+    if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
 
-  // OTP is valid, delete it from storage
-  delete otpStorage[email];
+    try {
+        // Mark email as verified
+        await userModel.updateOne({ email }, { isEmailVerified: true });
 
-  res.json({ message: "OTP verified successfully" });
+        // Clear the OTP
+        delete otpStorage[email];
+
+        res.json({ message: "OTP verified successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to verify OTP" });
+    }
 });
+
 
 app.post("/login",async (req,res)=>{
     let userCred = req.body
