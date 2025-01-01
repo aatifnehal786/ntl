@@ -18,6 +18,7 @@ const userSchema = mongoose.Schema({
         required:[true,"Age is Mandatory"],
         min: 12
     },
+    isEmailVerified: { type: Boolean, default: false },
     resetToken: {
         token: { type: String },
         expires: { type: Date },
