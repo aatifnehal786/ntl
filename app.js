@@ -260,10 +260,11 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
         }
         res.json(foods); // Send data back as JSON if found
     } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching data:", err); // Log the error
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
+
 
 
 
