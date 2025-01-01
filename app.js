@@ -228,7 +228,7 @@ app.post("/reset-password", async (req, res) => {
 
     try {
         // Verify the otp
-        if(storeData && storeData.otp === otp)
+        if(storeData.otp === otp)
         {
 
             bcrypt.genSalt(10, (err, salt) => {
