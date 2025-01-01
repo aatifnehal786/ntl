@@ -333,20 +333,7 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
 
 
 
-const path = require("path");
 
-// Serve React static files
-app.use(express.static("./"));
-
-// Fallback route to handle frontend paths
-app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"), (err) => {
-        if (err) {
-            console.error('Error sending index.html:', err);
-            res.status(500).send('Internal Server Error');
-        }
-    });
-});
 
 app.listen(port,()=>{
     console.log(`Server is up and running ${port}`)
