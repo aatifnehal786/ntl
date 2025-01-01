@@ -212,36 +212,47 @@ app.post("/forgot-password", async (req, res) => {
 
 
 
-app.post("/reset-password/:token", async (req, res) => {
-    const { token } = req.params;
-    const { newPass } = req.body;
+app.post("/reset-password", async (req, res) => {
+   
+    const { newPass, otp } = req.body;
+
+    if (!email || !otp) {
+        return res.status(400).json({ error: "Email and OTP are required" });
+    }
+
+    const storedData = otpStorage[email];
+
+    if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
 
     try {
-        // Verify the token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-        const email = decoded.email;
+        // Verify the otp
+        if(storeData && storeData.otp === otp)
+        {
 
-        // Find the user with the reset token
-        const user = await userModel.findOne({ email, "resetToken.token": token });
-        if (!user || user.resetToken.expires < new Date()) {
-            return res.status(400).send({ message: "Invalid or expired token" });
-        }
-
-        // Hash the new password
-        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.genSalt(10, (err, salt) => {
             if (err) return res.status(500).send({ message: "Error generating salt" });
-
+            // Hash the new password
             bcrypt.hash(newPass, salt, async (err, hash) => {
                 if (err) return res.status(500).send({ message: "Error hashing password" });
 
                 // Update password and clear reset token
                 user.password = hash;
-                user.resetToken = undefined;
+                
                 await user.save();
 
                 res.status(200).send({ message: "Password reset successfully" });
             });
         });
+
+            
+        }
+        
+        
+
+        
+        
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Some problem occurred" });
