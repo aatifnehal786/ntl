@@ -29,7 +29,7 @@ app.use(cors())
 
 
 app.use(cors({
-  origin: "http://localhost:5173", // Replace with your frontend's origin
+  origin: "https://677697815d0d595a0da3ea48--remarkable-starlight-dba353.netlify.app/", // Replace with your frontend's origin
   methods: "GET, POST, PUT, DELETE",
   credentials: true,
 }));
