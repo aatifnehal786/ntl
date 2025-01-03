@@ -156,25 +156,31 @@ app.post("/login", async (req, res) => {
         }
 
         bcrypt.compare(password, user.password, (err, success) => {
+            if (err) {
+                console.error("Error during password comparison:", err);
+                return res.status(500).send({ message: "Error verifying password" });
+            }
+
             if (success) {
                 jwt.sign({ email }, process.env.JWT_SECRET_KEY, (err, token) => {
-                    if (!err) {
-                        res.status(200).send({ 
-                            token, 
-                            message: "Login successful", 
-                            userid: user._id, 
-                            name: user.name 
-                        });
-                    } else {
-                        res.status(500).send({ message: "Error generating token" });
+                    if (err) {
+                        console.error("Error generating token:", err);
+                        return res.status(500).send({ message: "Error generating token" });
                     }
+
+                    return res.status(200).send({
+                        token,
+                        message: "Login successful",
+                        userid: user._id,
+                        name: user.name,
+                    });
                 });
             } else {
-                res.status(401).send({ message: "Incorrect password" });
+                return res.status(401).send({ message: "Incorrect password" });
             }
         });
     } catch (error) {
-        console.error(error);
+        console.error("Unexpected server error:", error);
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
