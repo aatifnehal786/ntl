@@ -27,22 +27,15 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-const allowedOrigins = [
-  "http://localhost:5173/",
-];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (allowedOrigins.includes(origin) || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // If cookies or authentication tokens are involved
-  })
-);
+
+const corsOptions = {
+    origin: "http://localhost:3000", // Replace with your frontend's URL
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // Allow cookies if needed
+};
+
+app.use(cors(corsOptions));
 
 
 app.use((req, res, next) => {
