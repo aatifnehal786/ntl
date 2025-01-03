@@ -169,7 +169,7 @@ app.post("/login", async (req, res) => {
                     }
 
                     return res.status(200).send({
-                        token,
+                        token:token,
                         message: "Login successful",
                         userid: user._id,
                         name: user.name,
