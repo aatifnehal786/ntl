@@ -28,7 +28,7 @@ app.use(express.json())
 app.use(cors())
 
 const allowedOrigins = [
-  "https://677697815d0d595a0da3ea48--remarkable-starlight-dba353.netlify.app",
+  "http://localhost:5173/",
 ];
 
 app.use(
