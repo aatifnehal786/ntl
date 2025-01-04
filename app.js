@@ -30,7 +30,7 @@ app.use(cors())
 
 
 const corsOptions = {
-    origin: "http://localhost:5173", // Replace with your frontend's URL
+    origin: "http://localhost:5173/", // Replace with your frontend's URL
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // Allow cookies if needed
 };
