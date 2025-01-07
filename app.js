@@ -329,7 +329,7 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     console.log("Requested date:", strDate);
 
     try {
-        let foods = await trackingModel.find({ user: userid, eatendate: strDate }).populate('user').populate('food');
+        let foods = await trackingModel.find({ user: userid, eatendate: strDate }).populate('users').populate('foods');
         console.log("Found foods:", foods); // Log the result
        
         return res.status(201).json(foods); // Send data back as JSON if found
