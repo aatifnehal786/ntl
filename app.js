@@ -196,9 +196,7 @@ app.post("/login", async (req, res) => {
             return res.status(404).send({ message: "User not found" });
         }
 
-        if (!user.isEmailVerified) {
-            return res.status(403).send({ message: "Email not verified. Please verify your email to login." });
-        }
+       
 
         bcrypt.compare(password, user.password, (err, success) => {
             if (err) {
