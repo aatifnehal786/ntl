@@ -18,9 +18,19 @@ const userSchema = mongoose.Schema({
         required:[true,"Age is Mandatory"],
         min: 12
     },
-    isEmailVerified: { type: Boolean, default: false }
+    isEmailVerified: { type: Boolean, default: false },
+    otp: { type: String },
+    otpExpires: { type: Date },
+    isVerified: { type: Boolean, default: false }
     
 },{timestamps:true})
+
+userSchema.methods.generateOtp = function () {
+    const otp = crypto.randomInt(100000, 999999).toString(); // Generate a 6-digit OTP
+    this.otp = otp;
+    this.otpExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+    return otp;
+};
 
 const userModel = mongoose.model("users",userSchema)
 
