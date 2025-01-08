@@ -12,7 +12,6 @@ const cors = require('cors')
 const nodemailer = require('nodemailer')
 const crypto = require("crypto");
 const port = process.env.PORT || 4000
-const verifiedEmail = require('./verifyEmail)
 
 
 
@@ -29,14 +28,11 @@ app.use(express.json())
 app.use(cors())
 
 
-
-const corsOptions = {
-    origin: "http://localhost:5173", // Replace with your frontend's URL
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // Allow cookies if needed
-};
-
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: "http://localhost:5173", // Replace with your frontend's origin
+  methods: "GET, POST, PUT, DELETE",
+  credentials: true,
+}));
 
 
 app.use((req, res, next) => {
@@ -55,7 +51,7 @@ const transporter = nodemailer.createTransport({
     }
 })
 
-app.post("/register",verifiedEmail,(req,res)=>{
+app.post("/register",(req,res)=>{
 
     let user = req.body
     bcrypt.genSalt(10,(err,salt)=>{
@@ -133,59 +129,8 @@ app.post("/verify-otp", async (req, res) => {
         res.status(500).json({ error: "Failed to verify OTP" });
     }
 });
-// API to verify email
-app.post("/verify-email/otp",async (req,res)=>{
-    const { email } = req.body;
 
-    try {
-        let user = await User.findOne({ email });
 
-        if (!user) {
-            user = new User({ email });
-        }
-
-        const otp = user.generateOtp();
-        await user.save();
-
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Your OTP Code',
-            text: `Your OTP is ${otp}. It is valid for 10 minutes.`,
-        });
-
-        res.status(200).json({ message: 'OTP sent to your email' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to send OTP' });
-    }
-})
-
-app.post("/email/verify",async (req,res)=>{
-
-    const { email, otp } = req.body;
-
-    try {
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        if (user.otp !== otp || user.otpExpires < Date.now()) {
-            return res.status(400).json({ error: 'Invalid or expired OTP' });
-        }
-
-        user.isVerified = true;
-        user.otp = undefined; // Clear OTP
-        user.otpExpires = undefined; // Clear expiry
-        await user.save();
-
-        res.status(200).json({ message: 'Email verified successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to verify OTP' });
-    }
-    
-})
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -196,34 +141,30 @@ app.post("/login", async (req, res) => {
             return res.status(404).send({ message: "User not found" });
         }
 
-       
+        if (!user.isEmailVerified) {
+            return res.status(403).send({ message: "Email not verified. Please verify your email to login." });
+        }
 
         bcrypt.compare(password, user.password, (err, success) => {
-            if (err) {
-                console.error("Error during password comparison:", err);
-                return res.status(500).send({ message: "Error verifying password" });
-            }
-
             if (success) {
                 jwt.sign({ email }, process.env.JWT_SECRET_KEY, (err, token) => {
-                    if (err) {
-                        console.error("Error generating token:", err);
-                        return res.status(500).send({ message: "Error generating token" });
+                    if (!err) {
+                        res.status(200).send({ 
+                            token, 
+                            message: "Login successful", 
+                            userid: user._id, 
+                            name: user.name 
+                        });
+                    } else {
+                        res.status(500).send({ message: "Error generating token" });
                     }
-
-                    return res.status(200).send({
-                        token:token,
-                        message: "Login successful",
-                        userid: user._id,
-                        name: user.name,
-                    });
                 });
             } else {
-                return res.status(401).send({ message: "Incorrect password" });
+                res.status(401).send({ message: "Incorrect password" });
             }
         });
     } catch (error) {
-        console.error("Unexpected server error:", error);
+        console.error(error);
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
@@ -390,7 +331,6 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
-
 
 
 
