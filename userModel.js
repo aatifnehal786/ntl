@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-
+const crtpto = require('crypto')
 const userSchema = mongoose.Schema({
     name:{
         type:String,
