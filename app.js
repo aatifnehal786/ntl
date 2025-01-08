@@ -133,7 +133,31 @@ app.post("/verify-otp", async (req, res) => {
     }
 });
 
+app.post("/verify-email",async (req,res)=>{
+    const { email } = req.body;
 
+    try {
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = new User({ email });
+        }
+
+        const otp = user.generateOtp();
+        await user.save();
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Your OTP Code',
+            text: `Your OTP is ${otp}. It is valid for 10 minutes.`,
+        });
+
+        res.status(200).json({ message: 'OTP sent to your email' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to send OTP' });
+    }
+})
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
