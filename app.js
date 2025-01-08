@@ -295,7 +295,7 @@ app.get("/foods/:name",verifiedToken,async (req,res)=>{
     let foodName = req.params.name
     let searchFood = await foodModel.find({name:{$regex:foodName,$options:'i'}})
     if(searchFood.length!==0){
-        res.status(201).send(searchFood)
+        return res.status(201).json(searchFood)
     }else{
         res.status(404).send({message:"Food Item not Found"})
     }
