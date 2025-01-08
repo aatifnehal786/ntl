@@ -12,6 +12,7 @@ const cors = require('cors')
 const nodemailer = require('nodemailer')
 const crypto = require("crypto");
 const port = process.env.PORT || 4000
+const verifiedEmail = require('./verifyEmail')
 
 
 
@@ -51,7 +52,7 @@ const transporter = nodemailer.createTransport({
     }
 })
 
-app.post("/register",(req,res)=>{
+app.post("/register",verifiedEmail,(req,res)=>{
 
     let user = req.body
     bcrypt.genSalt(10,(err,salt)=>{
