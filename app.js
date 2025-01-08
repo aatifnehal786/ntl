@@ -325,19 +325,22 @@ app.post("/track",verifiedToken,async (req,res)=>{
 app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     let userid = req.params.userid;
     let date = new Date(req.params.date);
-    let strDate = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
+    let strDate = (date.getMonth() + 1) + "/" + date.getDate()  +  "/" + date.getFullYear();
     console.log("Requested date:", strDate);
 
     try {
         let foods = await trackingModel.find({ user: userid, eatendate: strDate }).populate('user').populate('food');
         console.log("Found foods:", foods); // Log the result
-       
-        return res.status(201).json(foods); // Send data back as JSON if found
+        if (foods.length === 0) {
+            return res.status(204).send(); // No data found, return 204
+        }
+        return res.json(foods); // Send data back as JSON if found
     } catch (err) {
         console.error("Error fetching data:", err); // Log any errors
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
+
 
 
 
