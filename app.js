@@ -35,6 +35,7 @@ const corsOptions = {
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 };
+app.options("*", cors(corsOptions)); // Handle preflight requests
 
 app.use(cors(corsOptions));
 
