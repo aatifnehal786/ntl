@@ -343,7 +343,38 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
 
 
 
+app.delete("/un-register",verifiedToken,async (req,res)=>{
 
+    const {email} = req.body
+
+   const userEmail = await userModel.findOne({email})
+
+
+
+    if(!userEmail)
+    {
+        res.status(404).send({message:"User Not Found"})
+    }
+    
+        try
+        {
+            const user = await userModel.findOneAndDelete({email})
+    
+            if(user)
+            {
+                res.status(200).send({message:"User Un-registered Successfully"})
+            }
+    
+        }
+        catch(error)
+        {
+            console.log(error)
+            res.status(500).send({message:"An error occured while Un-registering User"})
+        }
+
+    
+   
+})
 
 
 
