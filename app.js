@@ -12,7 +12,7 @@ const cors = require('cors')
 const nodemailer = require('nodemailer')
 const crypto = require("crypto");
 const port = process.env.PORT || 4000
-const verifiedEmail = require('./verifyEmail')
+
 
 
 
@@ -29,11 +29,14 @@ app.use(express.json())
 app.use(cors())
 
 
-app.use(cors({
-  origin: "http://localhost:5173", // Replace with your frontend's origin
-  methods: "GET, POST, PUT, DELETE",
-  credentials: true,
-}));
+
+const corsOptions = {
+    origin: "http://localhost:5173", 
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 
 app.use((req, res, next) => {
@@ -51,8 +54,8 @@ const transporter = nodemailer.createTransport({
         pass:process.env.GMAIL_PASSWORD
     }
 })
-
-app.post("/register",verifiedEmail,(req,res)=>{
+// API ENDPOINT TO REGISTER
+app.post("/register",(req,res)=>{
 
     let user = req.body
     bcrypt.genSalt(10,(err,salt)=>{
@@ -74,6 +77,7 @@ app.post("/register",verifiedEmail,(req,res)=>{
 })
 
 const otpStorage = {};
+// API ENDPOINT TO send otp
 app.post("/send-otp", async (req, res) => {
   const { email } = req.body;
 
@@ -131,7 +135,7 @@ app.post("/verify-otp", async (req, res) => {
     }
 });
 
-
+// API ENDPOINT TO LOGIN
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -147,25 +151,31 @@ app.post("/login", async (req, res) => {
         }
 
         bcrypt.compare(password, user.password, (err, success) => {
+            if (err) {
+                console.error("Error during password comparison:", err);
+                return res.status(500).send({ message: "Error verifying password" });
+            }
+
             if (success) {
                 jwt.sign({ email }, process.env.JWT_SECRET_KEY, (err, token) => {
-                    if (!err) {
-                        res.status(200).send({ 
-                            token, 
-                            message: "Login successful", 
-                            userid: user._id, 
-                            name: user.name 
-                        });
-                    } else {
-                        res.status(500).send({ message: "Error generating token" });
+                    if (err) {
+                        console.error("Error generating token:", err);
+                        return res.status(500).send({ message: "Error generating token" });
                     }
+
+                    return res.status(200).send({
+                        token:token,
+                        message: "Login successful",
+                        userid: user._id,
+                        name: user.name,
+                    });
                 });
             } else {
-                res.status(401).send({ message: "Incorrect password" });
+                return res.status(401).send({ message: "Incorrect password" });
             }
         });
     } catch (error) {
-        console.error(error);
+        console.error("Unexpected server error:", error);
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
@@ -180,7 +190,7 @@ app.get("/foods",verifiedToken,async (req,res)=>{
 })
 
 
-
+// API ENDPOINT TO FORGOT PASSWORD
 app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
 
@@ -212,7 +222,7 @@ app.post("/forgot-password", async (req, res) => {
 
 
 
-
+// API ENDPOINT TO RESET-PASSWORD
 app.post("/reset-password", async (req, res) => {
     const { email, newPass, otp } = req.body;
 
@@ -282,17 +292,17 @@ app.post("/food/data",verifiedToken,async (req,res)=>{
 
     }
 })
-
+// API ENDPOINT TO SEARCH FOOD BY NAME
 app.get("/foods/:name",verifiedToken,async (req,res)=>{
     let foodName = req.params.name
     let searchFood = await foodModel.find({name:{$regex:foodName,$options:'i'}})
     if(searchFood.length!==0){
-        return res.status(201).json(searchFood)
+        res.status(201).send(searchFood)
     }else{
         res.status(404).send({message:"Food Item not Found"})
     }
 })
-
+// API ENDPOINT TO ADD EATEN FOOD ITEM
 app.post("/track",verifiedToken,async (req,res)=>{
 
     let trackData = req.body;
@@ -317,15 +327,13 @@ app.post("/track",verifiedToken,async (req,res)=>{
 app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     let userid = req.params.userid;
     let date = new Date(req.params.date);
-    let strDate = (date.getMonth() + 1) + "/" + date.getDate()  +  "/" + date.getFullYear();
+    let strDate = (date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getFullYear();
     console.log("Requested date:", strDate);
 
     try {
         let foods = await trackingModel.find({ user: userid, eatendate: strDate }).populate('user').populate('food');
         console.log("Found foods:", foods); // Log the result
-        if (foods.length === 0) {
-            return res.status(204).send(); // No data found, return 204
-        }
+      
         return res.json(foods); // Send data back as JSON if found
     } catch (err) {
         console.error("Error fetching data:", err); // Log any errors
