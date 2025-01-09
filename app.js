@@ -31,13 +31,15 @@ const app = express()
 
 
 const corsOptions = {
-    origin: "https://67800073b7517de7cf0e2f2f--fabulous-fox-1303db.netlify.app", 
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+  origin: 'https://67800073b7517de7cf0e2f2f--fabulous-fox-1303db.netlify.app', // Replace with your frontend's URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
-app.options("*", cors(corsOptions)); // Handle preflight requests
 
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Handle preflight requests
+
+
 
 app.use(express.json())
 app.use((req, res, next) => {
