@@ -94,7 +94,7 @@ app.post("/send-otp", async (req, res) => {
   try {
     // Send the OTP via email
     await transporter.sendMail({
-      from: `"Nutrify" <${process.env.EMAIL_USER}>`,
+      from: `"Nutrify" <${process.env.MY_GMAIL}>`,
       to: email,
       subject: "Your OTP Code",
       text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
