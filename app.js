@@ -31,7 +31,7 @@ const app = express()
 
 
 const corsOptions = {
-    origin: "http://localhost:5173", 
+    origin: "https://67800073b7517de7cf0e2f2f--fabulous-fox-1303db.netlify.app/", 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 };
