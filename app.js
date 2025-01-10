@@ -333,7 +333,7 @@ app.post("/track",verifiedToken,async (req,res)=>{
 app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     let userid = req.params.userid;
     let date = new Date(req.params.date);
-    let strDate = date.getDate() + "/" + (date.getMonth()+1) + "/" + date.getFullYear()
+    let strDate = (date.getMonth()+1) + "/" + date.getDate() + "/" + date.getFullYear()
     console.log("Requested date:", strDate);
 
     try {
