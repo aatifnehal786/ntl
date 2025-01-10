@@ -15,7 +15,6 @@ const port = process.env.PORT || 4000
 
 
 
-
 mongoose.connect(process.env.MONGO_URL)
 .then(()=>{
     console.log(`Database connection successful,${process.env.MONGO_URL}`)
@@ -25,23 +24,21 @@ mongoose.connect(process.env.MONGO_URL)
 })
 
 const app = express()
-
-
+app.use(express.json())
+app.use(cors())
 
 
 
 const corsOptions = {
-  origin: 'https://67800073b7517de7cf0e2f2f--fabulous-fox-1303db.netlify.app', // Replace with your frontend's URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-};
-app.options("*", cors(corsOptions)); // Handle preflight requests
+    origin: 'https://67800073b7517de7cf0e2f2f--fabulous-fox-1303db.netlify.app', // Replace with your frontend's URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+  };
+app.options("*", cors(corsOptions));
+
 app.use(cors(corsOptions));
 
 
-
-
-app.use(express.json())
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -57,7 +54,7 @@ const transporter = nodemailer.createTransport({
         pass:process.env.GMAIL_PASSWORD
     }
 })
-// API ENDPOINT TO REGISTER
+
 app.post("/register",(req,res)=>{
 
     let user = req.body
@@ -80,7 +77,6 @@ app.post("/register",(req,res)=>{
 })
 
 const otpStorage = {};
-// API ENDPOINT TO send otp
 app.post("/send-otp", async (req, res) => {
   const { email } = req.body;
 
@@ -92,7 +88,7 @@ app.post("/send-otp", async (req, res) => {
   const otp = crypto.randomInt(100000, 999999).toString();
 
   // Store the OTP (expire in 5 minutes)
-  otpStorage[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+  otpStorage[email] = { otp, expiresAt: Date.now() + 2 * 60 * 1000 };
 
   try {
     // Send the OTP via email
@@ -100,7 +96,7 @@ app.post("/send-otp", async (req, res) => {
       from: `"Nutrify" <${process.env.MY_GMAIL}>`,
       to: email,
       subject: "Your OTP Code",
-      text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
+      text: `Your OTP code is ${otp}. It will expire in 2 minutes.`,
     });
 
     res.json({ message: "OTP sent successfully" });
@@ -138,7 +134,7 @@ app.post("/verify-otp", async (req, res) => {
     }
 });
 
-// API ENDPOINT TO LOGIN
+
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -193,7 +189,7 @@ app.get("/foods",verifiedToken,async (req,res)=>{
 })
 
 
-// API ENDPOINT TO FORGOT PASSWORD
+
 app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
 
@@ -225,7 +221,7 @@ app.post("/forgot-password", async (req, res) => {
 
 
 
-// API ENDPOINT TO RESET-PASSWORD
+
 app.post("/reset-password", async (req, res) => {
     const { email, newPass, otp } = req.body;
 
@@ -246,6 +242,12 @@ app.post("/reset-password", async (req, res) => {
         const user = await userModel.findOne({ email });
         if (!user) {
             return res.status(404).json({ error: "User not found" });
+        }
+
+        // Check if the new password matches the current password
+        const isSamePassword = await bcrypt.compare(newPass, user.password);
+        if (isSamePassword) {
+            return res.status(400).json({ error: "New password cannot be the same as the current password" });
         }
 
         // Hash the new password
@@ -279,6 +281,7 @@ app.post("/reset-password", async (req, res) => {
 
 
 
+
 app.post("/food/data",verifiedToken,async (req,res)=>{
     let foodItem = req.body
     console.log(foodItem)
@@ -295,7 +298,7 @@ app.post("/food/data",verifiedToken,async (req,res)=>{
 
     }
 })
-// API ENDPOINT TO SEARCH FOOD BY NAME
+
 app.get("/foods/:name",verifiedToken,async (req,res)=>{
     let foodName = req.params.name
     let searchFood = await foodModel.find({name:{$regex:foodName,$options:'i'}})
@@ -305,7 +308,7 @@ app.get("/foods/:name",verifiedToken,async (req,res)=>{
         res.status(404).send({message:"Food Item not Found"})
     }
 })
-// API ENDPOINT TO ADD EATEN FOOD ITEM
+
 app.post("/track",verifiedToken,async (req,res)=>{
 
     let trackData = req.body;
@@ -330,7 +333,7 @@ app.post("/track",verifiedToken,async (req,res)=>{
 app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     let userid = req.params.userid;
     let date = new Date(req.params.date);
-    let strDate = (date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getFullYear();
+    let strDate = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
     console.log("Requested date:", strDate);
 
     try {
@@ -343,7 +346,6 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
-
 
 
 app.delete("/un-register",verifiedToken,async (req,res)=>{
@@ -374,10 +376,8 @@ app.delete("/un-register",verifiedToken,async (req,res)=>{
             console.log(error)
             return res.status(500).json({message:"An error occured while Un-registering User"})
         }
+    })
 
-    
-   
-})
 
 
 
