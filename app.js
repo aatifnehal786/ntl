@@ -24,20 +24,20 @@ mongoose.connect(process.env.MONGO_URL)
 })
 
 const app = express()
-app.use(express.json())
+
 app.use(cors())
 
 
 
 const corsOptions = {
-    origin: 'https://678157023574760fb30c88bd--fabulous-fox-1303db.netlify.app/', // Replace with your frontend's URL
+    origin: 'https://678157023574760fb30c88bd--fabulous-fox-1303db.netlify.app', // Replace with your frontend's URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
   };
 app.options("*", cors(corsOptions));
 
 app.use(cors(corsOptions));
-
+app.use(express.json())
 
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
