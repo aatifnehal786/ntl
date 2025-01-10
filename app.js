@@ -30,7 +30,7 @@ app.use(cors())
 
 
 const corsOptions = {
-    origin: 'https://678157023574760fb30c88bd--fabulous-fox-1303db.netlify.app', // Replace with your frontend's URL
+    origin: 'https://6781a466c948718f05fc3cf4--fabulous-fox-1303db.netlify.app', // Replace with your frontend's URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
   };
