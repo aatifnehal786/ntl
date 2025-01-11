@@ -21,7 +21,7 @@ const trackingSchema = new mongoose.Schema(
     },
     eatendate: {
       type: String,
-      default: => new Date().toLocaleDateString(), // Dynamic default
+      default: new Date().toLocaleDateString(), // Dynamic default
     },
     quantity: {
       type: Number,
