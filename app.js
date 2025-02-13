@@ -58,6 +58,11 @@ const transporter = nodemailer.createTransport({
 app.post("/register",(req,res)=>{
 
     let user = req.body
+    let olduser = userModel.findOne({email:user.email})
+    if(olduser!==null)
+    {
+        res.status(403).send({message:"User already registered"})
+    }
     bcrypt.genSalt(10,(err,salt)=>{
         if(!err){
             bcrypt.hash(user.password,salt,async (err,hpass)=>{
