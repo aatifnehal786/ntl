@@ -212,7 +212,7 @@ app.post("/forgot-password", async (req, res) => {
       text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
     });
 
-    res.json({ message: "OTP sent successfully" });
+    return res.json({ message: "OTP sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
     res.status(500).json({ error: "Failed to send OTP" });
