@@ -99,7 +99,7 @@ app.post("/send-otp", async (req, res) => {
       text: `Your OTP code is ${otp}. It will expire in 2 minutes.`,
     });
 
-    res.json({ message: "OTP sent successfully" });
+    return res.json({ message: "OTP sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
     res.status(500).json({ error: "Failed to send OTP" });
