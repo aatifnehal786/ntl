@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGO_URL)
 
 // Middleware
 const corsOptions = {
-    origin: 'https://teal-tanuki-b65992.netlify.app',
+    origin: 'https://nutrition-tra.netlify.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 };
