@@ -175,7 +175,7 @@ app.post("/login", async (req, res) => {
                     });
                 });
             } else {
-                return res.status(401).send({ message: "Incorrect password" });
+                return res.status(401).json({ message: "Incorrect password" });
             }
         });
     } catch (error) {
