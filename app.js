@@ -151,20 +151,20 @@ app.post("/login", async (req, res) => {
         }
 
         if (!user.isEmailVerified) {
-            return res.status(403).send({ message: "Email not verified. Please verify your email to login." });
+            return res.status(403).json({ message: "Email not verified. Please verify your email to login." });
         }
 
         bcrypt.compare(password, user.password, (err, success) => {
             if (err) {
                 console.error("Error during password comparison:", err);
-                return res.status(500).send({ message: "Error verifying password" });
+                return res.status(500).json({ message: "Error verifying password" });
             }
 
             if (success) {
                 jwt.sign({ email }, process.env.JWT_SECRET_KEY, (err, token) => {
                     if (err) {
                         console.error("Error generating token:", err);
-                        return res.status(500).send({ message: "Error generating token" });
+                        return res.status(500).json({ message: "Error generating token" });
                     }
 
                     return res.status(200).send({
@@ -180,7 +180,7 @@ app.post("/login", async (req, res) => {
         });
     } catch (error) {
         console.error("Unexpected server error:", error);
-        res.status(500).send({ message: "Some problem occurred" });
+        res.status(500).json({ message: "Some problem occurred" });
     }
 });
 
@@ -259,13 +259,13 @@ app.post("/reset-password", async (req, res) => {
         bcrypt.genSalt(10, (err, salt) => {
             if (err) {
                 console.error("Error generating salt:", err);
-                return res.status(500).send({ message: "Error generating salt" });
+                return res.status(500).json({ message: "Error generating salt" });
             }
 
             bcrypt.hash(newPass, salt, async (err, hash) => {
                 if (err) {
                     console.error("Error hashing password:", err);
-                    return res.status(500).send({ message: "Error hashing password" });
+                    return res.status(500).json({ message: "Error hashing password" });
                 }
 
                 // Update user password
@@ -275,12 +275,12 @@ app.post("/reset-password", async (req, res) => {
                 // Remove OTP from storage
                 delete otpStorage[email];
 
-                res.status(200).send({ message: "Password reset successfully" });
+                res.status(200).json({ message: "Password reset successfully" });
             });
         });
     } catch (error) {
         console.error("Error resetting password:", error);
-        res.status(500).send({ message: "Some problem occurred" });
+        res.status(500).json({ message: "Some problem occurred" });
     }
 });
 
@@ -294,7 +294,7 @@ app.post("/food/data",verifiedToken,async (req,res)=>{
 
         let newFood = await foodModel.create(foodItem)
         console.log(newFood)
-        res.send({newFood,message:"New Food Added"})
+       return res.json({newFood,message:"New Food Added"})
 
     }
     catch(err){
@@ -308,9 +308,9 @@ app.get("/foods/:name",verifiedToken,async (req,res)=>{
     let foodName = req.params.name
     let searchFood = await foodModel.find({name:{$regex:foodName,$options:'i'}})
     if(searchFood.length!==0){
-        res.status(201).send(searchFood)
+        return res.status(201).json(searchFood)
     }else{
-        res.status(404).send({message:"Food Item not Found"})
+        return res.status(404).json({message:"Food Item not Found"})
     }
 })
 
@@ -321,7 +321,7 @@ app.post("/track",verifiedToken,async (req,res)=>{
     try{
         let data = await trackingModel.create(trackData)
         console.log(data)
-        res.status(201).send({message:"Food added"})
+        return res.status(201).json({message:"Food added"})
     }
     catch(err){
         console.log(err)
