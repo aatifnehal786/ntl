@@ -190,13 +190,23 @@ app.get("/foods", verifiedToken, async (req, res) => {
 // Search Foods
 app.get("/foods/:name", verifiedToken, async (req, res) => {
     const foodName = req.params.name;
-    const results = await foodModel.find({ name: { $regex: foodName, $options: "i" } });
-    if (results.length) {
-        res.status(201).json(results);
-    } else {
-        res.status(404).json({ message: "Food Item not Found" });
+    console.log(" Searching for food:", foodName);
+
+    try {
+        const results = await foodModel.find({ name: { $regex: foodName, $options: "i" } });
+        console.log(" Results found:", results);
+
+        if (results.length) {
+            res.status(200).json(results);
+        } else {
+            res.status(404).json({ message: "Food Item not Found" });
+        }
+    } catch (err) {
+        console.error("❌ Error fetching food:", err.message);
+        res.status(500).json({ message: "Server Error", error: err.message });
     }
 });
+
 
 // Add Food Item
 app.post("/food/data", verifiedToken, async (req, res) => {
