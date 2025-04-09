@@ -234,7 +234,8 @@ app.post("/track", verifiedToken, async (req, res) => {
 app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     const userid = req.params.userid;
     const date = new Date(req.params.date);
-    const strDate = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+     let strDate =    date.getDate() + "/" + (date.getMonth()+1) + "/" + date.getFullYear()
+    console.log("Requested date:", strDate);
 
     try {
         const foods = await trackingModel.find({ user: userid, eatendate: strDate })
