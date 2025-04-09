@@ -234,19 +234,26 @@ app.post("/track", verifiedToken, async (req, res) => {
 app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     const userid = req.params.userid;
     const date = new Date(req.params.date);
-     let strDate =    (date.getMonth()+1) + "/" +  date.getDate() + "/" + "/" + date.getFullYear()
-    console.log("Requested date:", strDate);
+
+    // Start and end of the date
+    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
 
     try {
-        const foods = await trackingModel.find({ user: userid, eatendate: strDate })
-            .populate("user")
-            .populate("food");
+        const foods = await trackingModel.find({
+            user: userid,
+            eatendate: { $gte: startOfDay, $lte: endOfDay }
+        })
+        .populate("user")
+        .populate("food");
+
         res.json(foods);
     } catch (err) {
         console.error("Error fetching data:", err);
         res.status(500).send({ message: "Some problem occurred" });
     }
 });
+
 
 // Delete User
 app.delete("/un-register", verifiedToken, async (req, res) => {
