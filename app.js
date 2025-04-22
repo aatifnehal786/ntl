@@ -235,7 +235,7 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     const userid = req.params.userid;
     const date = new Date(req.params.date);
 
-    const eatenDate = (date.getMonth()+1) + "/" + date.getdate() + "/" + date.getFullYear();
+    const eatenDate = (date.getMonth()+1) + "/" + date.getDate() + "/" + date.getFullYear();
     console.log(eatenDate);
   
 
