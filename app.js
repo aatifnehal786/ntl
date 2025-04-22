@@ -235,14 +235,14 @@ app.get("/track/:userid/:date", verifiedToken, async (req, res) => {
     const userid = req.params.userid;
     const date = new Date(req.params.date);
 
-    // Start and end of the date
-    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+    const eatenDate = (date.getMonth()+1) + "/" + date.getdate() + "/" + date.getFullYear();
+    console.log(eatenDate);
+  
 
     try {
         const foods = await trackingModel.find({
             user: userid,
-            eatendate: { $gte: startOfDay, $lte: endOfDay }
+            eatendate: eatenDate
         })
         .populate("user")
         .populate("food");
