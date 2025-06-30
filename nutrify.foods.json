@@ -1,0 +1,168 @@
+[{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d0"
+  },
+  "name": "Chicken Curry",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "./chicken curry.jpeg",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d1"
+  },
+  "name": "Paneer Tikka",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://t4.ftcdn.net/jpg/08/16/13/27/360_F_816132727_GttNKheh30xescq1LnUC4nr1vZFzL7Yp.jpg",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d2"
+  },
+  "name": "Dal Tadka",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRX-hXwQWAz5oSOQGmu9wuWe8f-s0ZjOdg3TA&s",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d3"
+  },
+  "name": "Aloo Gobi",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://www.indianhealthyrecipes.com/wp-content/uploads/2022/03/aloo-gobi-recipe.jpg",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d4"
+  },
+  "name": "Chana Masala",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQyXCDBOAVEGSZeUfujO9h69N-zVpKc_ey44Q&s",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d5"
+  },
+  "name": "vegetable biryani",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://i.ytimg.com/vi/Do7ZdUodDdw/maxresdefault.jpg",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d6"
+  },
+  "name": "Paratha",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRT7snK-toZ0nBvxJyyzQyVpySYG8IxIToeng&s",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d7"
+  },
+  "name": "Aloo Paratha",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://appetizingdishes.com/wp-content/uploads/2024/01/Aloo-paratha-in-plate.jpg",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d8"
+  },
+  "name": "Masala Dhosa",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://i.pinimg.com/originals/e8/dc/7f/e8dc7f0b59b8602ba30621dee3c6291c.jpg",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880d9"
+  },
+  "name": "Chicken Biryani",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://www.cubesnjuliennes.com/wp-content/uploads/2020/07/Chicken-Biryani-Recipe.jpg",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880da"
+  },
+  "name": "Chicken Gazala",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://i.ytimg.com/vi/BSJfji5H2ns/hq720.jpg?sqp=-oaymwE7CK4FEIIDSFryq4qpAy0IARUAAAAAGAElAADIQj0AgKJD8AEB-AH-DoACuAiKAgwIABABGHIgXigSMA8=&rs=AOn4CLA7qiK94hYZo7nbZMEpCP76XXs1Aw",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880db"
+  },
+  "name": "Matar Paneer",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtrK-gUEZ5I3HtsVL9aCIzaT85CK-tgWXBgw&s",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880dc"
+  },
+  "name": "Fried Rice",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYsKe3gWvHhgv7QH3ST3FmoaZQLyaOxN4zPg&s",
+  "fat": 4,
+  "fiber": 2
+},
+{
+  "_id": {
+    "$oid": "676eb774aea316d7ac5880dd"
+  },
+  "name": "Chicken Curry",
+  "calories": 110,
+  "protein": 15,
+  "carbohydrates": 5,
+  "imageUrl": "https://www.foodandwine.com/thmb/8YAIANQTZnGpVWj2XgY0dYH1V4I=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/spicy-chicken-curry-FT-RECIPE0321-58f84fdf7b484e7f86894203eb7834e7.jpg",
+  "fat": 4,
+  "fiber": 2
+}]
