@@ -14,8 +14,7 @@ const crypto = require("crypto");
 const app = express();
 const port = process.env.PORT || 4000;
 
-const app = express();
-const port = process.env.PORT || 4000;
+
 
 mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log(`Database connection successful, ${process.env.MONGO_URL}`))
