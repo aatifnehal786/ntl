@@ -21,12 +21,12 @@ mongoose.connect(process.env.MONGO_URL)
     .catch((err) => console.log(err));
 
 // Middleware
-// const corsOptions = {
-//     origin: 'https://nutrtrkr-app.netlify.app',
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-// };
-// app.use(cors(corsOptions));
+const corsOptions = {
+    origin: 'https://nutrition-tra.netlify.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
 // app.options("*", cors(corsOptions));
 app.use(express.json());
 // app.use((req, res, next) => {
