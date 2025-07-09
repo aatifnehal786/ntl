@@ -21,12 +21,11 @@ mongoose.connect(process.env.MONGO_URL)
     .catch((err) => console.log(err));
 
 // Middleware
-const corsOptions = {
-    origin: 'https://nutrify247.netlify.app',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-};
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: "https://nutrify247.netlify.app", // Allow only your frontend
+  credentials: true, // If you're sending cookies or auth headers
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+}));
 // app.options("*", cors(corsOptions));
 app.use(express.json());
 // app.use((req, res, next) => {
