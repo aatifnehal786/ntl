@@ -34,7 +34,7 @@ app.use(express.json());
 //     res.setHeader("Expires", "0");
 //     next();
 // });
-app.use(cors())
+
 
 // Email transporter
 const transporter = nodemailer.createTransport({
