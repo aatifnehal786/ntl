@@ -53,7 +53,21 @@ app.post("/register", async (req, res) => {
     const olduser = await userModel.findOne({ email: user.email });
     if (olduser) return res.status(403).send({ message: "User already registered" });
 
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(user.email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+     const passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
+
+     if(!passwordRegex.test(user.password)){
+        return res.status(401).send({message:"Password must contain at least one uppercase, one lowercase and one special character"})
+     }
+
     try {
+       
+
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
         const doc = await userModel.create(user);
