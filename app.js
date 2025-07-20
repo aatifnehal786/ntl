@@ -10,7 +10,8 @@ const trackingModel = require("./trackingModel");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
-
+// const bodyparser = require('body-parser')
+const axios = require('axios')
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -22,7 +23,7 @@ mongoose.connect(process.env.MONGO_URL)
 
 // Middleware
 app.use(cors({
-  origin: "https://nutrify247.netlify.app", // Allow only your frontend
+  origin: "*", // Allow only your frontend
   credentials: true, // If you're sending cookies or auth headers
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
@@ -48,38 +49,68 @@ const transporter = nodemailer.createTransport({
 const otpStorage = {};
 
 // Register
+const axios = require("axios");
+
 app.post("/register", async (req, res) => {
-    const user = req.body;
-    const olduser = await userModel.findOne({ email: user.email });
-    if (olduser) return res.status(403).send({ message: "User already registered" });
+  const user = req.body;
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const { reCaptchaValue } = user;
 
-    if (!emailRegex.test(user.email)) {
-      return res.status(400).json({ message: "Invalid email format" });
+  // ✅ 1. Verify reCAPTCHA with Google
+  try {
+    const recaptchaResponse = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      new URLSearchParams({
+        secret: "6LdsmokrAAAAAB1LgyzQtYwgfCVWyC2hhn5MXLBR", // 🔒 Use env in production
+        response: reCaptchaValue,
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    if (!recaptchaResponse.data.success) {
+      return res.status(403).json({ message: "reCAPTCHA verification failed" });
     }
+  } catch (err) {
+    console.error("reCAPTCHA error:", err.message);
+    return res.status(500).json({ message: "Error verifying reCAPTCHA" });
+  }
 
-   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  // ✅ 2. Validate user input
+  const olduser = await userModel.findOne({ email: user.email });
+  if (olduser)
+    return res.status(403).json({ message: "User already registered" });
 
-if (!passwordRegex.test(user.password)) {
-    return res.status(401).send({
-        message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(user.email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(user.password)) {
+    return res.status(401).json({
+      message:
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     });
-}
+  }
 
+  // ✅ 3. Register user
+  try {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
 
-    try {
-       
-
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-        const doc = await userModel.create(user);
-        res.status(201).send({ doc, message: "User registered" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send({ message: "Some problem" });
-    }
+    const doc = await userModel.create(user);
+    res.status(201).json({ doc, message: "User registered" });
+  } catch (err) {
+    console.error("Registration error:", err.message);
+    res.status(500).json({ message: "Server error during registration" });
+  }
 });
+
 
 // Send OTP
 app.post("/send-otp", async (req, res) => {
@@ -124,31 +155,63 @@ app.post("/verify-otp", async (req, res) => {
 
 // Login
 app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password, reCaptchaValue } = req.body;
 
-    try {
-        const user = await userModel.findOne({ email });
-        if (!user) return res.status(404).send({ message: "User not found" });
-        if (!user.isEmailVerified) {
-            return res.status(403).json({ message: "Email not verified. Please verify your email to login." });
-        }
+  try {
+    // ✅ 1. Verify reCAPTCHA
+    const recaptchaResponse = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      new URLSearchParams({
+        secret: "6LdsmokrAAAAAB1LgyzQtYwgfCVWyC2hhn5MXLBR",
+        response: reCaptchaValue,
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(401).json({ message: "Incorrect password" });
-
-        const token = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
-
-        res.status(200).send({
-            token,
-            message: "Login successful",
-            userid: user._id,
-            name: user.name,
-        });
-    } catch (err) {
-        console.error("Unexpected server error:", err);
-        res.status(500).json({ message: "Some problem occurred" });
+    if (!recaptchaResponse.data.success) {
+      return res.status(403).json({ message: "reCAPTCHA failed" });
     }
+
+    // ✅ 2. Find user
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // ✅ 3. Check if email verified
+    if (!user.isEmailVerified) {
+      return res
+        .status(403)
+        .json({ message: "Email not verified. Please verify your email to login." });
+    }
+
+    // ✅ 4. Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(401).json({ message: "Incorrect password" });
+
+    // ✅ 5. Generate JWT
+    const token = jwt.sign(
+      { email: user.email, id: user._id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({
+      token,
+      message: "Login successful",
+      userid: user._id,
+      name: user.name,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 });
+
 
 // Forgot Password
 app.post("/forgot-password", async (req, res) => {
