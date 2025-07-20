@@ -59,11 +59,14 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Invalid email format" });
     }
 
-     const passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
+   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-     if(!passwordRegex.test(user.password)){
-        return res.status(401).send({message:"Password must contain at least one uppercase, one lowercase and one special character"})
-     }
+if (!passwordRegex.test(user.password)) {
+    return res.status(401).send({
+        message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    });
+}
+
 
     try {
        
