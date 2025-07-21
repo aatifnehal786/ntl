@@ -49,7 +49,7 @@ const transporter = nodemailer.createTransport({
 const otpStorage = {};
 
 // Register
-const axios = require("axios");
+
 
 app.post("/register", async (req, res) => {
   const user = req.body;
