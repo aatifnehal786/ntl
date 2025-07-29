@@ -241,6 +241,11 @@ app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
 
+     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+              }
+
     const otp = crypto.randomInt(100000, 999999).toString();
     otpStorage[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
@@ -268,10 +273,7 @@ app.post("/reset-password", async (req, res) => {
         return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              if (!emailRegex.test({email})) {
-                return res.status(400).json({ message: "Invalid email format" });
-              }
+     
 
     try {
         const user = await userModel.findOne({ email });
@@ -281,9 +283,8 @@ app.post("/reset-password", async (req, res) => {
 
   
 
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  if (!passwordRegex.test({newPass})) {
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(newPass)) {
     return res.status(401).json({
       message:
         "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
