@@ -153,11 +153,11 @@ app.post("/verify-otp", async (req, res) => {
     }
 });
 function generateAccessToken(userId) {
-  return jwt.sign({ userId }, ACCESS_SECRET, { expiresIn: "15m" });
+  return jwt.sign({ userId }, JWT_SECRET_KEY, { expiresIn: "1h" });
 }
 
 function generateRefreshToken(userId) {
-  return jwt.sign({ userId }, REFRESH_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ userId }, REFRESH_SECRET_KEY, { expiresIn: "7d" });
 }
 // Login
 app.post("/login", async (req, res) => {
