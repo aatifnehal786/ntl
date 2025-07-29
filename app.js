@@ -117,6 +117,11 @@ app.post("/send-otp", async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+              }
+
     const otp = crypto.randomInt(100000, 999999).toString();
     otpStorage[email] = { otp, expiresAt: Date.now() + 2 * 60 * 1000 };
 
@@ -138,6 +143,11 @@ app.post("/send-otp", async (req, res) => {
 app.post("/verify-otp", async (req, res) => {
     const { email, otp } = req.body;
     const storedData = otpStorage[email];
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+              }
 
     if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
         return res.status(400).json({ error: "Invalid or expired OTP" });
