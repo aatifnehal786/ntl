@@ -152,10 +152,16 @@ app.post("/verify-otp", async (req, res) => {
         res.status(500).json({ error: "Failed to verify OTP" });
     }
 });
+function generateAccessToken(userId) {
+  return jwt.sign({ userId }, ACCESS_SECRET, { expiresIn: "15m" });
+}
 
+function generateRefreshToken(userId) {
+  return jwt.sign({ userId }, REFRESH_SECRET, { expiresIn: "7d" });
+}
 // Login
 app.post("/login", async (req, res) => {
-  const { email, password, reCaptchaValue } = req.body;
+  const { email, password, reCaptchaValue, keepSignedIn } = req.body;
 
   try {
     // ✅ 1. Verify reCAPTCHA
@@ -193,24 +199,41 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
 
     // ✅ 5. Generate JWT
-    const token = jwt.sign(
-      { email: user.email, id: user._id },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "1h" }
-    );
+    const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
 
     res.status(200).json({
-      token,
+      accessToken,
       message: "Login successful",
       userid: user._id,
       name: user.name,
     });
+
+      res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "Strict",
+    maxAge: keepSignedIn ? 7 * 24 * 60 * 60 * 1000 : 0 // 7 days or session-only
+  });
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+app.post("/refresh-token", (req, res) => {
+  const token = req.cookies.refreshToken;
+  if (!token) return res.status(401).json({ msg: "No token" });
+
+  jwt.verify(token, REFRESH_SECRET_KEY, (err, decoded) => {
+    if (err) return res.status(403).json({ msg: "Invalid token" });
+
+    const accessToken = generateAccessToken(decoded.userId);
+    res.json({ accessToken });
+  });
+});
+
 
 
 // Forgot Password
