@@ -270,7 +270,23 @@ app.post("/reset-password", async (req, res) => {
 
     try {
         const user = await userModel.findOne({ email });
+
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(user.email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+              }
         if (!user) return res.status(404).json({ error: "User not found" });
+
+  
+
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(newPass)) {
+    return res.status(401).json({
+      message:
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    });
+  }
 
         const isSame = await bcrypt.compare(newPass, user.password);
         if (isSame) return res.status(400).json({ error: "New password cannot be the same as the current password" });
