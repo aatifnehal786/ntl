@@ -283,7 +283,7 @@ app.post("/reset-password", async (req, res) => {
 
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  if (!passwordRegex.test(newPass)) {
+  if (!passwordRegex.test({newPass})) {
     return res.status(401).json({
       message:
         "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
