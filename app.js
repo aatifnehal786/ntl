@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGO_URL)
 
 // Middleware
 app.use(cors({
-  origin: "https://nutrify247.netlify.app", // Allow only your frontend
+  origin: "*", // Allow only your frontend
   credentials: true, // If you're sending cookies or auth headers
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
