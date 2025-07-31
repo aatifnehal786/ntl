@@ -9,7 +9,7 @@ const foodSchema = mongoose.Schema({
         type:Number,
         required:true
     },
-    protein:{
+    protien:{
         type:Number,
         required:true
     },
