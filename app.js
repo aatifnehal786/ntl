@@ -112,65 +112,6 @@ app.post("/register", async (req, res) => {
 });
 
 
-// Send OTP
-app.post("/send-otp", async (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
-
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-              if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: "Invalid email format" });
-              }
-
-    const otp = crypto.randomInt(100000, 999999).toString();
-    otpStorage[email] = { otp, expiresAt: Date.now() + 2 * 60 * 1000 };
-
-    try {
-        await transporter.sendMail({
-            from: `"Nutrify" <${process.env.MY_GMAIL}>`,
-            to: email,
-            subject: "Your OTP Code",
-            text: `Your OTP code is ${otp}. It will expire in 2 minutes.`,
-        });
-        res.json({ message: "OTP sent successfully" });
-    } catch (err) {
-        console.error("Error sending email:", err);
-        res.status(500).json({ error: "Failed to send OTP" });
-    }
-});
-
-// Verify OTP
-app.post("/verify-otp", async (req, res) => {
-    const { email, otp } = req.body;
-    const storedData = otpStorage[email];
-
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-              if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: "Invalid email format" });
-              }
-
-    if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
-        return res.status(400).json({ error: "Invalid or expired OTP" });
-    }
-
-    try {
-        await userModel.updateOne({ email }, { isEmailVerified: true });
-        delete otpStorage[email];
-        res.json({ message: "OTP verified successfully" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to verify OTP" });
-    }
-});
-function generateAccessToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
-}
-
-function generateRefreshToken(userId) {
-  return jwt.sign({ userId }, process.env.REFRESH_SECRET_KEY, { expiresIn: "7d" });
-}
 // Login
 app.post("/login", async (req, res) => {
   const { email, password, reCaptchaValue, keepSignedIn } = req.body;
@@ -245,6 +186,70 @@ app.post("/refresh-token", (req, res) => {
     res.json({ accessToken });
   });
 });
+
+
+// Send OTP
+app.post("/send-otp", async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+              if (!emailRegex.test(email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+              }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    otpStorage[email] = { otp, expiresAt: Date.now() + 2 * 60 * 1000 };
+
+    try {
+        await transporter.sendMail({
+            from: `"Nutrify" <${process.env.MY_GMAIL}>`,
+            to: email,
+            subject: "Your OTP Code",
+            text: `Your OTP code is ${otp}. It will expire in 2 minutes.`,
+        });
+        res.json({ message: "OTP sent successfully" });
+    } catch (err) {
+        console.error("Error sending email:", err);
+        res.status(500).json({ error: "Failed to send OTP" });
+    }
+});
+
+// Verify OTP
+app.post("/verify-otp", async (req, res) => {
+    const { email, otp } = req.body;
+    const storedData = otpStorage[email];
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+              if (!emailRegex.test(email)) {
+                return res.status(400).json({ message: "Invalid email format" });
+              }
+
+    if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    try {
+        await userModel.updateOne({ email }, { isEmailVerified: true });
+        delete otpStorage[email];
+        res.json({ message: "OTP verified successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to verify OTP" });
+    }
+});
+function generateAccessToken(userId) {
+  return jwt.sign({ userId }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
+}
+
+function generateRefreshToken(userId) {
+  return jwt.sign({ userId }, process.env.REFRESH_SECRET_KEY, { expiresIn: "7d" });
+}
+
+
+
 
 
 
