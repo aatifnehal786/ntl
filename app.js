@@ -45,6 +45,10 @@ app.use(express.json());
 
 // Register
 
+// otp storage
+
+const otpStorage = {}
+
 
 app.post("/register", async (req, res) => {
   const user = req.body;
@@ -234,6 +238,8 @@ app.post("/send-otp", async (req, res) => {
     return res.status(500).json({ error: "Failed to send OTP email" });
   }
 });
+
+
 
 // ✅ VERIFY OTP
 app.post("/verify-otp", async (req, res) => {
