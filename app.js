@@ -213,7 +213,7 @@ app.post("/send-otp", async (req, res) => {
         "api-key": process.env.BREVO_API_KEY,
       },
       body: JSON.stringify({
-        sender: { name: "Instagram Clone", email: "aatifnehal786@gmail.com" },
+        sender: { name: "Instagram Clone", email: "nehalahmed05011967@gmail.com" },
         to: [{ email }],
         subject: "Your OTP Code",
         textContent: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
