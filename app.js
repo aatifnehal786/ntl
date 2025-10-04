@@ -16,6 +16,9 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 
+const fetch = require("node-fetch")
+
+
 
 mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log(`Database connection successful, ${process.env.MONGO_URL}`))
@@ -38,17 +41,7 @@ app.use(express.json());
 
 
 // Email transporter
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,       // Use 465 for secure SSL
-  secure: true,
-    auth: {
-        user: process.env.MY_GMAIL,
-        pass: process.env.GMAIL_PASSWORD
-    }
-});
 
-const otpStorage = {};
 
 // Register
 
@@ -188,59 +181,90 @@ app.post("/refresh-token", (req, res) => {
     res.json({ accessToken });
   });
 });
-
-
-// Send OTP
+// ✅ SEND OTP
 app.post("/send-otp", async (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
+  const { email } = req.body;
 
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!email) return res.status(400).json({ error: "Email is required" });
 
-              if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: "Invalid email format" });
-              }
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
 
-    const otp = crypto.randomInt(100000, 999999).toString();
-    otpStorage[email] = { otp, expiresAt: Date.now() + 2 * 60 * 1000 };
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000);
 
-    try {
-        await transporter.sendMail({
-            from: `"Nutrify" <${process.env.MY_GMAIL}>`,
-            to: email,
-            subject: "Your OTP Code",
-            text: `Your OTP code is ${otp}. It will expire in 2 minutes.`,
-        });
-        res.json({ message: "OTP sent successfully" });
-    } catch (err) {
-        console.error("Error sending email:", err);
-        res.status(500).json({ error: "Failed to send OTP" });
+  // Store OTP with expiry (10 mins)
+  otpStorage[email] = {
+    otp: otp.toString(),
+    expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+  };
+
+  try {
+    const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender: { name: "Instagram Clone", email: "aatifnehal786@gmail.com" },
+        to: [{ email }],
+        subject: "Your OTP Code",
+        textContent: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+      }),
+    });
+
+    const data = await brevoRes.json();
+    console.log("Brevo response:", data);
+
+    if (!brevoRes.ok) {
+      return res.status(500).json({
+        error: "Failed to send OTP email",
+        details: data,
+      });
     }
+
+    return res.status(201).json({
+      message: "OTP sent successfully",
+    });
+  } catch (error) {
+    console.error("Error sending OTP email:", error);
+    return res.status(500).json({ error: "Failed to send OTP email" });
+  }
 });
 
-// Verify OTP
+// ✅ VERIFY OTP
 app.post("/verify-otp", async (req, res) => {
-    const { email, otp } = req.body;
-    const storedData = otpStorage[email];
+  const { email, otp } = req.body;
 
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!email || !otp) {
+    return res.status(400).json({ error: "Email and OTP are required" });
+  }
 
-              if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: "Invalid email format" });
-              }
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
 
-    if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
-        return res.status(400).json({ error: "Invalid or expired OTP" });
-    }
+  const storedData = otpStorage[email];
+  if (
+    !storedData ||
+    storedData.otp !== otp ||
+    storedData.expiresAt < Date.now()
+  ) {
+    return res.status(400).json({ error: "Invalid or expired OTP" });
+  }
 
-    try {
-        await userModel.updateOne({ email }, { isEmailVerified: true });
-        delete otpStorage[email];
-        res.json({ message: "OTP verified successfully" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to verify OTP" });
-    }
+  try {
+    await userModel.updateOne({ email }, { isEmailVerified: true });
+    delete otpStorage[email];
+    res.json({ message: "OTP verified successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to verify OTP" });
+  }
 });
 function generateAccessToken(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
@@ -249,86 +273,109 @@ function generateAccessToken(userId) {
 function generateRefreshToken(userId) {
   return jwt.sign({ userId }, process.env.REFRESH_SECRET_KEY, { expiresIn: "7d" });
 }
-
-
-
-
-
-
-// Forgot Password
+// ✅ Forgot Password — Send OTP via Brevo
 app.post("/forgot-password", async (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
+  const { email } = req.body;
 
-     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!email) return res.status(400).json({ error: "Email is required" });
 
-              if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: "Invalid email format" });
-              }
-
-    const otp = crypto.randomInt(100000, 999999).toString();
-    otpStorage[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
-
-    try {
-        await transporter.sendMail({
-            from: `"Nutrify" <${process.env.MY_GMAIL}>`,
-            to: email,
-            subject: "Your OTP Code",
-            text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
-        });
-        res.json({ message: "OTP sent successfully" });
-    } catch (err) {
-        console.error("Error sending email:", err);
-        res.status(500).json({ error: "Failed to send OTP" });
-    }
-});
-
-// Reset Password
-app.post("/reset-password", async (req, res) => {
-    const { email, newPass, otp } = req.body;
-    const storedData = otpStorage[email];
-
-    if (!email || !otp || !newPass) return res.status(400).json({ error: "Email, OTP, and new password are required" });
-    if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
-        return res.status(400).json({ error: "Invalid or expired OTP" });
-    }
-
-   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-              if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: "Invalid email format" });
-              }
-     
-
-    try {
-        const user = await userModel.findOne({ email });
-
-            
-        if (!user) return res.status(404).json({ error: "User not found" });
-
-  
-
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  if (!passwordRegex.test(newPass)) {
-    return res.status(401).json({
-      message:
-        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-    });
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
   }
 
-        const isSame = await bcrypt.compare(newPass, user.password);
-        if (isSame) return res.status(400).json({ error: "New password cannot be the same as the current password" });
+  // Generate 6-digit OTP
+  const otp = crypto.randomInt(100000, 999999).toString();
 
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(newPass, salt);
-        await user.save();
-        delete otpStorage[email];
-        res.status(200).json({ message: "Password reset successfully" });
-    } catch (err) {
-        console.error("Error resetting password:", err);
-        res.status(500).json({ message: "Some problem occurred" });
+  // Store OTP with expiry (5 mins)
+  otpStorage[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+
+  try {
+    // Send via Brevo API
+    const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender: { name: "Nutrify", email: "aatifnehal786@gmail.com" },
+        to: [{ email }],
+        subject: "Your OTP Code - Nutrify",
+        textContent: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
+      }),
+    });
+
+    const data = await brevoRes.json();
+    console.log("Brevo response:", data);
+
+    if (!brevoRes.ok) {
+      return res.status(500).json({
+        error: "Failed to send OTP email",
+        details: data,
+      });
     }
+
+    return res.status(200).json({ message: "OTP sent successfully" });
+  } catch (err) {
+    console.error("Error sending OTP email:", err);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
 });
+
+
+// ✅ Reset Password — Verify OTP and Update Password
+app.post("/reset-password", async (req, res) => {
+  const { email, newPass, otp } = req.body;
+
+  if (!email || !otp || !newPass)
+    return res.status(400).json({ error: "Email, OTP, and new password are required" });
+
+  const storedData = otpStorage[email];
+  if (!storedData || storedData.otp !== otp || storedData.expiresAt < Date.now()) {
+    return res.status(400).json({ error: "Invalid or expired OTP" });
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Password strength check
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPass)) {
+      return res.status(400).json({
+        message:
+          "Password must contain at least one uppercase, one lowercase, one number, and one special character",
+      });
+    }
+
+    const isSame = await bcrypt.compare(newPass, user.password);
+    if (isSame)
+      return res
+        .status(400)
+        .json({ error: "New password cannot be the same as the current password" });
+
+    // Hash and save new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPass, salt);
+    await user.save();
+
+    // Delete OTP after successful reset
+    delete otpStorage[email];
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (err) {
+    console.error("Error resetting password:", err);
+    res.status(500).json({ message: "Some problem occurred" });
+  }
+});
+
 
 // Get All Foods
 app.get("/foods", verifiedToken, async (req, res) => {
