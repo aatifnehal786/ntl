@@ -19,6 +19,11 @@ const userSchema = mongoose.Schema({
         min: 12
     },
     isEmailVerified: { type: Boolean, default: false },
+    refreshToken: {
+    type: String,
+    default: null
+    }
+
 
     
 },{timestamps:true})

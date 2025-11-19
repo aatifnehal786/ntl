@@ -115,7 +115,7 @@ app.post("/login", async (req, res) => {
   const { email, password, reCaptchaValue, keepSignedIn } = req.body;
 
   try {
-    // ✅ 1. Verify reCAPTCHA
+    // 1. Verify reCAPTCHA
     const recaptchaResponse = await axios.post(
       "https://www.google.com/recaptcha/api/siteverify",
       new URLSearchParams({
@@ -123,9 +123,7 @@ app.post("/login", async (req, res) => {
         response: reCaptchaValue,
       }),
       {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
       }
     );
 
@@ -133,57 +131,111 @@ app.post("/login", async (req, res) => {
       return res.status(403).json({ message: "reCAPTCHA failed" });
     }
 
-    // ✅ 2. Find user
+    // 2. Find user
     const user = await userModel.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // ✅ 3. Check if email verified
+    // 3. Check email verification
     if (!user.isEmailVerified) {
       return res
         .status(403)
-        .json({ message: "Email not verified. Please verify your email to login." });
+        .json({ message: "Email not verified. Please verify your email." });
     }
 
-    // ✅ 4. Check password
+    // 4. Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Incorrect password" });
 
-    // ✅ 5. Generate JWT
+    // 5. Generate tokens
     const accessToken = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
 
-    res.status(200).json({
+    // 6. Set cookie BEFORE sending JSON response
+    // In login route after generating refreshToken
+    user.refreshToken = refreshToken;
+    await user.save();
+
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "Strict",
+  path: "/",
+  maxAge: keepSignedIn ? 7 * 24 * 60 * 60 * 1000 : 0
+});
+
+
+    // 7. Send response ONCE
+    return res.status(200).json({
       accessToken,
       message: "Login successful",
       userid: user._id,
       name: user.name,
     });
 
-      res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "Strict",
-    maxAge: keepSignedIn ? 7 * 24 * 60 * 60 * 1000 : 0 // 7 days or session-only
-  });
-
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-app.post("/refresh-token", (req, res) => {
-  const token = req.cookies.refreshToken;
-  if (!token) return res.status(401).json({ msg: "No token" });
+// Refresh Token 
+app.post("/refresh-token", async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
 
-  jwt.verify(token, REFRESH_SECRET_KEY, (err, decoded) => {
-    if (err) return res.status(403).json({ msg: "Invalid token" });
+    if (!token) {
+      return res.status(401).json({ message: "Refresh token missing" });
+    }
 
-    const accessToken = generateAccessToken(decoded.userId);
-    res.json({ accessToken });
-  });
+    // Verify signature
+    const decoded = jwt.verify(token, REFRESH_SECRET_KEY);
+
+    // Find user
+    const user = await userModel.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // IMPORTANT: compare stored token
+    if (user.refreshToken !== token) {
+      // Possible stolen/reused token
+      user.refreshToken = null;
+      await user.save();
+      res.clearCookie("refreshToken");
+      return res.status(403).json({ message: "Invalid or reused refresh token" });
+    }
+
+    // Generate NEW tokens (rotation)
+    const newAccessToken = generateAccessToken(user._id);
+    const newRefreshToken = generateRefreshToken(user._id);
+
+    // Save new refresh token
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    // Set new cookie
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.json({ accessToken: newAccessToken });
+
+  } catch (err) {
+    console.error("Refresh Error:", err);
+
+    // Expired / invalid refresh token
+    res.clearCookie("refreshToken");
+    return res.status(403).json({ message: "Invalid or expired refresh token" });
+  }
 });
+
+
 // ✅ SEND OTP
 app.post("/send-otp", async (req, res) => {
   const { email } = req.body;
