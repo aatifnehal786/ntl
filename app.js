@@ -30,26 +30,26 @@ app.use(cors({
   credentials: true, // If you're sending cookies or auth headers
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
-// app.options("*", cors(corsOptions));
+
 app.use(express.json());
-// app.use((req, res, next) => {
-//     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-//     res.setHeader("Pragma", "no-cache");
-//     res.setHeader("Expires", "0");
-//     next();
-// });
+app.use((req, res, next) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    next();
+});
 
 
 // Email transporter
 
 
-// Register
+
 
 // otp storage
 
 const otpStorage = {}
 
-
+// Register
 app.post("/register", async (req, res) => {
   const user = req.body;
 
@@ -213,7 +213,7 @@ app.post("/send-otp", async (req, res) => {
         "api-key": process.env.BREVO_API_KEY,
       },
       body: JSON.stringify({
-        sender: { name: "Instagram Clone", email: "nehalahmed05011967@gmail.com" },
+        sender: { name: "Nutrify", email: "nehalahmed05011967@gmail.com" },
         to: [{ email }],
         subject: "Your OTP Code",
         textContent: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
