@@ -242,6 +242,11 @@ app.post("/send-otp", async (req, res) => {
 
   if (!email) return res.status(400).json({ error: "Email is required" });
 
+  const user = await userModel.findOne({email})
+
+  console.log(user.email)
+  console.log(user.isEmailVerified)
+
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ message: "Invalid email format" });
@@ -257,7 +262,11 @@ app.post("/send-otp", async (req, res) => {
   };
 
   try {
-    const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+    if(!user){
+      return res.status(404).json({message:"User Not Registered"})
+    }
+    else {
+      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -282,8 +291,9 @@ app.post("/send-otp", async (req, res) => {
     }
 
     return res.status(201).json({
-      message: "OTP sent successfully",
+      message: "OTP sent successfully",email:user.email
     });
+    }
   } catch (error) {
     console.error("Error sending OTP email:", error);
     return res.status(500).json({ error: "Failed to send OTP email" });
